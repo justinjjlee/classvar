@@ -11,6 +11,8 @@ Pkg.update();
 using ProgressMeter
 using LinearAlgebra, Statistics, Distributions;
 using Gadfly, Colors;
+
+include("func_VectorAR.jl")
 ```
 To test the function, we can use Kilian (2009, American Economic Review) and replicate the results. The data was publicly available and  downloaded from [American Economic Association](https://www.aeaweb.org/articles?id=10.1257/aer.99.3.1053).
 
