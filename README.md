@@ -8,7 +8,7 @@ To run the function, following packages are required and updated to-date.
 import Pkg;
 Pkg.update();
 
-using ProgressMeter
+using ProgressMeter;
 using LinearAlgebra, Statistics, Distributions;
 using Gadfly, Colors;
 
