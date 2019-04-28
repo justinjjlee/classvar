@@ -44,7 +44,6 @@ function func_VAR(data, p)
     𝝨 = 𝞄' * 𝞄 ./ (T-p-p*k-1);
     return 𝚩, 𝞄, 𝝨;
 end
-# Example
 
 function func_IRFvar(data, p)
     T, k = size(data);
