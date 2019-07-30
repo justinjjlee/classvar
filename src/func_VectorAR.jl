@@ -6,7 +6,7 @@ using FredData;
 using Gadfly, Colors;
 #=
 # To test using FRED macro data
-# your_api = 
+# your_api =
 #fred_set = Fred("$(your_api)");
 
 gdp = get_data(fred_set, "GDPC1";
@@ -166,3 +166,5 @@ function func_IRFvar(data, p)
            ψ_lb_2sd, ψ_lb_1sd, ψ_ub_1sd, ψ_ub_2sd,
            FEVDC;
 end
+
+# Ploting function - spit out the plot object
