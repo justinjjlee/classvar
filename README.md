@@ -27,4 +27,4 @@ p = 12;                            # Lag order
   FEVDC = func_IRFvar(y, p);       # Results from impulse responses, bootstrap CI band, and FEVDC
 ```
 
-Author: Justin J. Lee (justin.j.lee3411@gmail.com)
+Author: Justin J. Lee
