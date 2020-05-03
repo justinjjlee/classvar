@@ -26,3 +26,5 @@ p = 12;                            # Lag order
   ψ_ub_1sd, ψ_ub_2sd,
   FEVDC = func_IRFvar(y, p);       # Results from impulse responses, bootstrap CI band, and FEVDC
 ```
+
+-Justin J. Lee
