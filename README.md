@@ -1,5 +1,5 @@
 # julia-VectorAR.jl
-Julia implementation of vector autoregressive (VAR(p)) model with closed form solutions.
+Julia implementation of vector autoregressive (VAR(p)) model with closed-form solution.
 Calculations of the impulse response function calculation with wild-bootstrap estimation, along with forecast error variance decomposition (FEVDC).
 
 
