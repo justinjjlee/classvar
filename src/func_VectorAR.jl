@@ -121,7 +121,6 @@ function func_IRFvar(data, p)
 
     # Calculate the standard deviation, across differen iteration (4th dim)
     σ_ψ_boot = std(ψ_boot, dims = 4);
-    σ_ψ_cum_boot = std(ψ_cum_boot, dims = 4);
 
     ψ_ub_1sd = ψ + σ_ψ_boot
     ψ_lb_1sd = ψ - σ_ψ_boot
