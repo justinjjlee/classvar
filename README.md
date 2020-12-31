@@ -8,12 +8,12 @@ import Pkg;
 Pkg.update();
 
 using ProgressMeter;
-using CSV, DataFrames;
+using DataFrames, DelimitedFiles;
 using LinearAlgebra, Statistics, Distributions;
 using Gadfly, Colors;
 
 # Clone package
-Pkg.clone("https://github.com/jjl3411/julia-VectorAR.jl")
+Pkg.clone("https://github.com/justinjoliver/julia-VectorAR.jl")
 # Or, for local drive
 # include(pwd() * "//src//func_VectorAR.jl")
 ```
@@ -21,8 +21,7 @@ To test the function, we use Kilian (2009, American Economic Review) and replica
 
 ```julia
 # Data from Kilian (2009), into DataFrame
-y = CSV.read(pwd() * "\\test\\kilian_2009_aer.csv");   
-y = Matrix(y);                     # Convert to Array format
+y = readdlm("kilian_2009_aer.txt"); 
 
 # Define parameters
 p = 24;                            # Lag order
@@ -43,7 +42,7 @@ h = 15;                            # Horizon - IRF
 # FEVDC: Forecast Error Variance Decomposition
 ```
 
-For a long-run impact measure, we employ Blanchard and Quah [1989, American Economic Review](https://www.jstor.org/stable/1827924?seq=1)
+For a long-run impact measure, we employ Blanchard and Quah [(1989, American Economic Review)](https://www.jstor.org/stable/1827924?seq=1),
 
 ```julia
 ψ,
