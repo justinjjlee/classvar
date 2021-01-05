@@ -1,4 +1,4 @@
-# julia-VectorAR.jl
+# Vector Autoregressive (VAR(p))
 Julia implementation of vector autoregressive (VAR(p)) model with closed form solution - OLS estimation. The code for confidence band primarily follows estimation used by Kilian (2009, American Economic Review).
 Calculations of the impulse response functions (IRFs) with wild-bootstrap estimation, with estimations of forecast error variance decomposition (FEVDC).
 
