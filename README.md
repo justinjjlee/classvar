@@ -17,6 +17,8 @@ Pkg.clone("https://github.com/justinjoliver/julia-VectorAR.jl")
 # Or, for local drive
 # include(pwd() * "//src//func_VectorAR.jl")
 ```
+
+### Short-run impact - impulse response function)
 To test the function, we use Kilian (2009, American Economic Review) and replicate the results. The data was publicly available and  downloaded from [American Economic Association](https://www.aeaweb.org/articles?id=10.1257/aer.99.3.1053).
 
 ```julia
@@ -27,7 +29,9 @@ y = readdlm("kilian_2009_aer.txt");
 p = 24;                            # Lag order
 h = 15;                            # Horizon - IRF
 ℏ = 12;                            # Horizon - FEVDC
-𝚩, 𝞄, 𝝨 = func_VAR(y, p);          # Coefficient matrix, residuals, and covariance matrix
+𝚩, 𝞄, 𝝨 = func_VAR(y, p);          # Coefficient matrix, 
+                                   # residuals, 
+                                   # and covariance matrix
 ψ,
   ψ_lb_1sd, ψ_ub_1sd,
   ψ_lb_2sd, ψ_ub_2sd,
@@ -41,7 +45,7 @@ h = 15;                            # Horizon - IRF
 # ↪ with standard error level of confidence
 # FEVDC: Forecast Error Variance Decomposition
 ```
-
+### Long-run impact (Blanchard and Quah (1989))
 For a long-run impact measure, we employ Blanchard and Quah [(1989, American Economic Review)](https://www.jstor.org/stable/1827924?seq=1),
 
 ```julia
@@ -49,8 +53,8 @@ For a long-run impact measure, we employ Blanchard and Quah [(1989, American Eco
   ψ_lb_1sd, ψ_ub_1sd,
   ψ_lb_2sd, ψ_ub_2sd = func_IRFvar_LR(data, p, h);  
 ```
+### Plot - example
 
-Plot example
 ```julia
 # Plot impulse response, response of 2nd variable to 3rd shock
 i, j = 2,3;
