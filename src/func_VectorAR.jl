@@ -6,6 +6,10 @@ using Gadfly, Colors;
 
 eye(n) = Matrix{Float64}(I, n, n)
 chol(mat) = convert(Array{Float64}, cholesky(Hermitian(mat)).U');
+# For creating diagonal matrix;
+# Nuance in julia calculation 
+# https://web.eecs.umich.edu/~fessler/course/551/julia/tutor/03-diag.html
+diagx(x) = diagm(vec(x))
 
 # (1) Function to calculate impulse response
 function func_VAR(data, p)
@@ -158,6 +162,38 @@ function func_IRFvar(data, p, h, ℏ)
            FEVDC;
 end
 
+function var_hd(y, p)
+    h = 15;                            # Horizon - IRF
+    ℏ = 12;                            # Horizon - FEVDC
+
+    𝚩, 𝞄, 𝝨 = func_VAR(y, p);          # Coefficient matrix, 
+                                   # residuals, 
+                                   # and covariance matrix
+    ψ,
+        ψ_lb_1sd, ψ_ub_1sd,
+        ψ_lb_2sd, ψ_ub_2sd,
+        FEVDC = func_IRFvar(y, p, h, ℏ);      
+
+
+
+    T, K = size(y)
+    # already lower triangular
+    uhat = 𝞄 * inv(chol(𝝨))
+    # Initialize:
+    yhat_hd = zeros(T-p, K, K)
+    for i_shock = 1:K
+        ulast = uhat[:, i_shock]
+        uj = zeros(T-p, K);
+        for i_horizon = 1:h
+            uj = uj .+ (ulast .* ψ[:, i_shock, i_horizon]');
+            ulast = vcat(0, ulast[1:(end-1)]);
+        end
+        yhat_hd[:, :, i_shock] = uj
+    end
+
+    return yhat_hd
+end
+
 function func_contemp(bmat, 𝝨_ols, k, p)
     Ik = eye(k);
     i_block = 1:k; # initial, block of coefficients for same lag.
@@ -285,4 +321,173 @@ function func_IRFvar_LR(data, p, h)
 
     return ψ,
            ψ_lb_1sd, ψ_ub_1sd, ψ_lb_2sd, ψ_ub_2sd
+end
+
+# Create vectors of lags
+function matlag(x, lag)
+    # Create matrix with original data in lag structure
+    #   also add constant term
+
+    # NOTE: This lag structure only works if the matrix
+    #   does not require contemporaneous term.
+    #   i.e. OLS regressionlon
+    T, N = size(x)
+    Y = x[lag:T, :];
+
+    for i = 1:L-1
+        Y = hcat(Y, x[(lag-i):(T-i), :]);
+    end
+    # Add constant vector
+    Y = hcat(Y, ones(size(Y)[1], 1))
+    return Y
+end
+
+# Setting up lag structure of data for
+#   Mix-frequency VAR .....................................................
+function lagspit(x, p)
+    try
+        # get size
+        global R, C = size(x);
+    catch 
+        # if error, it means feeding as vector
+        global R, C = length(x), 1;
+    end
+    
+    #Take the first R-p rows of matrix x
+    x1=x[1:(R-p),:];
+    #Preceed them with p rows of zeros and return
+    y=vcat(zeros(p,C), x1);
+    return y
+end
+
+function prepare( data,L )
+    X=lagspit(data,1); # First lag
+    for j=2:L
+        X=hcat(X, lagspit(data,j));
+    end
+    X=hcat(X, ones(size(X)[1],1));
+    return X
+end
+
+function create_dummies(lamda,tau,delta,epsilon,p,mu,sigma,n)
+    # Creates matrices of dummy observations [...];
+    #lamda tightness parameter
+    #tau  prior on sum of coefficients
+    #delta prior mean for VAR coefficients
+    # epsilon tigtness of the prior around constant
+    # mu sample mean of the data
+    # sigma AR residual variances for the data
+    
+    
+    
+
+    # Initialise output (necessary for final concatenation to work when tau=0):
+    x = [];
+    y = [];
+    yd1 = [];
+    yd2 = [];
+    xd1 = [];
+    xd2 = [];
+    
+    ## Get dummy matrices in equation (5) of Banbura et al. 2007:
+    if lamda>0
+        if epsilon >0
+            yd1=vcat(diagx(sigma.*delta)./lamda,
+                zeros(n*(p-1),n),
+                diagx(sigma),
+                zeros(1,n));
+            
+            jp=diagx(1:p);
+            
+            xd1=vcat(hcat(kron(jp,diagx(sigma)./lamda), zeros((n*p),1)),
+                zeros(n,(n*p)+1),
+                hcat(zeros(1,n*p), epsilon));
+
+    else
+        
+        yd1=vcat(diagx(sigma.*delta)./lamda,
+             zeros(n*(p-1),n),
+             diagx(sigma));
+         
+        jp=diagx(1:p);
+        
+        xd1=vcat(kron(jp,diagx(sigma)./lamda),
+             zeros(n,(n*p))); 
+        end
+    end
+    ## Get additional dummy matrices - see equation (9) of Banbura et al. 2007:
+    if tau>0
+        if epsilon>0
+            yd2=diagx(delta.*mu)./tau;
+            xd2=hcat(kron(ones(1,p),yd2), zeros(n,1));
+        else
+            yd2=diagx(delta.*mu)./tau;
+            xd2=kron(ones(1,p),yd2);  
+        end
+    end
+         
+    # return
+    y=vcat(yd1, yd2);
+    x=vcat(xd1, xd2);
+    return y, x
+end
+
+function invpd(in)
+    temp = eye(size(in,2));
+    out = in\temp;
+    return out
+end
+
+function stability(beta,n,l)
+
+    #coef   (n*l+1)xn matrix with the coef from the VAR
+    #l      number of lags
+    #n      number of endog variables
+    #FF     matrix with all coef
+    #S      dummy var: if equal one->stability
+    coef=reshape(beta,n*l+1,n);
+    #coef
+    #coef
+    FF=zeros(n*l,n*l);
+    FF[n+1:n*l, 1:n*(l-1)]= eye(n*(l-1))#eye(n*(l-1), n*(l-1));
+    
+    temp = reshape(beta, n*l+1, n);
+    temp = temp[1:n*l, 1:n]';
+    FF[1:n, 1:n*l] = temp;
+    ee=maximum(abs.(eigvals(FF)));
+    return ee>1
+end
+
+function iwpQ(v,ixpx)
+    k=size(ixpx)[1];
+    z=zeros(v,k);
+    mu=zeros(k,1);
+    for i=1:v
+        z[i,:]=(chol(ixpx)'*randn(k,1))';
+    end
+    
+    return inv(z'*z)
+end
+
+function comp(beta,n,l,ex)
+
+    #coef   (n*l+1)xn matrix with the coef from the VAR
+    #l      number of lags
+    #n      number of endog variables
+    #FF     matrix with all coef
+    #S      dummy var: if equal one->instability
+    #coef=reshape(beta,n*l+1,n);
+    #coef
+    #coef
+    FF=zeros(n*l,n*l);
+    FF[n+1:n*l,1:n*(l-1)]=eye(n*(l-1));
+    
+    temp=reshape(beta,n*l+ex,n);
+    temp=temp[1:n*l,1:n]';
+    FF[1:n,1:n*l]=temp;
+    temp=reshape(beta,n*l+ex,n);
+    mu=zeros(n*l,1);
+    mu[1:n]=temp[end,:]';
+    
+    return FF, mu'
 end
