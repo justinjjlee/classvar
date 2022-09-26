@@ -26,3 +26,23 @@ function recovery_lag(Δy, yfirst, lag)
     end
     return yfin
 end
+
+# Function to generate iterative matrix block for regressor
+# Reminder that multivariate equation's explanatory and 
+#   response variables are interpreted 
+#   differently in time series model
+function var_data(data, p)
+    T, k = size(data)
+    # Set up L.H.S.: set t-by-k array
+    y = data';
+    Y = y[:, p:T];
+
+    for i = 1:(p-1)
+        Y = [Y; y[:, (p-i):(T-i)]];
+    end
+    # Set up R.H.S.
+    X = [ones(1, T-p); Y[:, 1:(T-p)]];
+    Y = y[:, ((p+1):T)];
+
+    return X, Y
+end
