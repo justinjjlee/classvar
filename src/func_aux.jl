@@ -1,4 +1,4 @@
-﻿# Functions for the Vector Autoregressive model
+﻿# Functions for Auxiliary Operations for this Repository
 import Pkg;
 using ProgressMeter;
 using LinearAlgebra, Statistics;
