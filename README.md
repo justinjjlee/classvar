@@ -6,17 +6,18 @@ For the Bayesian implementation of the equivalent models, estimations, and forec
 Section unchecked are currently in development. This repository will be polished and improved as I develop and translate.
 
 ## Model Estimation
-[x] Vector Autoregressive (VAR(p)) Model
-[x] Factor-augmented Vector Autoregressive (FAVAR(p)) Model
-[ ] Block-recursive Structural Vector Autoregressive Model
-[ ] Vector Error Correction Model (known and unknow co-integration)
+- [x] [Vector Autoregressive (VAR(p)) Model](https://github.com/justinjjlee/classvar/tree/master/test/var%20fit)
+- [x] [Factor-augmented Vector Autoregressive (FAVAR(p)) Model](https://github.com/justinjjlee/classvar/tree/master/test/favar)
+- [ ] Block-recursive Structural Vector Autoregressive Model
+- [ ] Vector Error Correction Model (known and unknow co-integration)
 
 ## Projections
-[x] Short-run impulse response functions (Cholesky estimation)
-[x] Long-run impulse response functions
-[ ] Generalized impulse response functions
-[ ] Block-recursive short-run impulse response functions
+- [x] [Short-run impulse response functions (Cholesky estimation)](https://github.com/justinjjlee/classvar/tree/master/test/var%20irf)
+- [x] [Long-run impulse response functions](https://github.com/justinjjlee/classvar/tree/master/test/var%20irf)
+- [ ] Generalized impulse response functions
+- [ ] Block-recursive short-run impulse response functions
 
 ## Decompositions
-[x] Variance decomposition
-[x] Historical decomposition
+See functions within each models for applications. Based on the model identifications, computing the decomposition methods may vary.
+- [x] Variance decomposition
+- [x] Historical decomposition
