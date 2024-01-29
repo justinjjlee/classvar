@@ -2,7 +2,6 @@
 import Pkg;
 using ProgressMeter;
 using LinearAlgebra, Statistics;
-using Gadfly, Colors;
 
 eye(n) = Matrix{Float64}(I, n, n)
 chol(mat) = convert(Array{Float64}, cholesky(Hermitian(mat)).U');
@@ -321,6 +320,39 @@ function func_IRFvar_LR(data, p, h)
 
     return ψ,
            ψ_lb_1sd, ψ_ub_1sd, ψ_lb_2sd, ψ_ub_2sd
+end
+
+
+function gIRF(data, p, h)
+    # Impulse response functions - point estimate
+    #   (a) unit-scale response
+    #   (b) orthogonalized response
+    #   (c) cumulative shock ("generalized") response
+    T, k = size(data);
+
+    𝚩_ols, 𝞄_ols, 𝝨_ols = func_VAR(data, p);
+    V_ols = 𝚩_ols[:, 1];
+    𝚩_ols = 𝚩_ols[:, 2:size(𝚩_ols,2)];
+    # For standardization of the impulse response,
+    ρ = convert(Array{Float64}, cholesky(𝝨_ols).U');
+    σ = (𝝨_ols * eye(k)).^(-1/2)
+
+    𝝖 = [𝚩_ols; [kron(eye(k), eye(p - 1)) zeros(k*(p-1), k)]];
+    J = [eye(k) zeros(k, k*(p-1))];
+
+    # Compute impulse response
+    ψ  = zeros(k, k, (h + 1));
+    ψo = zeros(k, k, (h + 1));
+    ψg = zeros(k, k, (h + 1));
+
+    for i_irf = 0:1:h
+        ψ[:,:, (i_irf + 1)] = J * 𝝖^(i_irf) * J';
+        # If needed to be standardized, multiply p
+        ψo[:,:, (i_irf + 1)] = ψ[:,:, (i_irf + 1)] * ρ
+        ψg[:,:, (i_irf + 1)] = ψ[:,:, (i_irf + 1)] * ρ * σ
+    end
+
+    return ψ, ψo, ψg;
 end
 
 # Create vectors of lags

@@ -14,10 +14,16 @@ Section unchecked are currently in development. This repository will be polished
 ## Projections
 - [x] [Short-run impulse response functions (Cholesky estimation)](https://github.com/justinjjlee/classvar/tree/master/test/var%20irf)
 - [x] [Long-run impulse response functions](https://github.com/justinjjlee/classvar/tree/master/test/var%20irf)
-- [ ] Generalized impulse response functions
+- [x] Generalized impulse response functions
 - [ ] Block-recursive short-run impulse response functions
 
 ## Decompositions
 See functions within each models for applications. Based on the model identifications, computing the decomposition methods may vary.
 - [x] Variance decomposition
 - [x] Historical decomposition
+
+## Example Applications
+To test the functions and show application, I use following published or common macroeconometric models and frameworks.
+- [Kilian (2009, American Economic Review)](https://www.aeaweb.org/articles?id=10.1257/aer.99.3.1053)
+- [Bernanke, Boivin, and Eliasz (2005)](https://academic.oup.com/qje/article-abstract/120/1/387/1931468)
+- Forecasting and generalized impulse response function with [US (Treasury)](https://fred.stlouisfed.org/series/T10Y2Y) and [Euro Area (European Central Bank)](https://data.ecb.europa.eu/data/datasets/YC/data-information) 
