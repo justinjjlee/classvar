@@ -1,0 +1,3 @@
+# Johansen MLE of VECM with unknown cointegrating vector and unrestricted intercept
+
+Original code derivation from Kilian and Lütkepohl - [Structural Vector Autoregressive Analysis](https://www.cambridge.org/core/books/structural-vector-autoregressive-analysis/DAF4217439EA585D10902D58A8849E06), citing the original work on multivariate relationships with cointegration by [Søren Johansen (1988)](https://www.sciencedirect.com/science/article/abs/pii/0165188988900413). The MATLAB version of the code was available through [Lutz Kilian's website](https://sites.google.com/site/lkilian2019/textbook/code).

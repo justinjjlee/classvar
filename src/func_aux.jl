@@ -2,7 +2,6 @@
 import Pkg;
 using ProgressMeter;
 using LinearAlgebra, Statistics;
-using Gadfly, Colors;
 
 eye(n) = Matrix{Float64}(I, n, n)
 chol(mat) = convert(Array{Float64}, cholesky(Hermitian(mat)).U');

@@ -9,7 +9,7 @@ Section unchecked are currently in development. This repository will be polished
 - [x] [Vector Autoregressive (VAR(p)) Model](https://github.com/justinjjlee/classvar/tree/master/test/var%20fit)
 - [x] [Factor-augmented Vector Autoregressive (FAVAR(p)) Model](https://github.com/justinjjlee/classvar/tree/master/test/favar)
 - [ ] Block-recursive Structural Vector Autoregressive Model
-- [ ] Vector Error Correction Model (known and unknow co-integration)
+- [x] Vector Error Correction Model (known and unknow co-integration)
 
 ## Projections
 - [x] [Short-run impulse response functions (Cholesky estimation)](https://github.com/justinjjlee/classvar/tree/master/test/var%20irf)
