@@ -1,18 +1,5 @@
-# Impulse Response Function
-Calculations of the impulse response function (IRFs) with wild-bootstrap estimation, with estimations of forecast error variance decomposition (FEVDC). The code for confidence band primarily follows estimation used by Kilian (2009, American Economic Review).
-
-To run the function, following packages are required and updated to-date.
-```julia
-import Pkg;
-Pkg.update();
-
-using ProgressMeter;
-using DataFrames, DelimitedFiles;
-using LinearAlgebra, Statistics, Distributions;
-using Gadfly, Colors;
-
-# include(pwd() * "//src//func_VectorAR.jl")
-```
+# Impulse Response Functions
+Following examples are variations and examples of computing various identified impulse response functions.
 
 ## Short-run Impulse Response Function
 To test the function, we use Kilian (2009, American Economic Review) and replicate the results. The data was publicly available and  downloaded from [American Economic Association](https://www.aeaweb.org/articles?id=10.1257/aer.99.3.1053).
@@ -30,8 +17,7 @@ h = 15;                            # Horizon - IRF
                                    # and covariance matrix
 ψ,
   ψ_lb_1sd, ψ_ub_1sd,
-  ψ_lb_2sd, ψ_ub_2sd,
-  FEVDC = func_IRFvar(y, p, h, ℏ);       
+  ψ_lb_2sd, ψ_ub_2sd = func_IRFvar(y, p, h, ℏ);       
 # Results:
 # ψ: point estimate of impulse responses
 # ↪ Default → unit shock estimate,
@@ -39,7 +25,6 @@ h = 15;                            # Horizon - IRF
 # ψ_ub_(#)sd Upper-bound bootstrap confidence interval
 # ψ_lb_(#)sd lower-bound bootstrap confidence interval
 # ↪ with standard error level of confidence
-# FEVDC: Forecast Error Variance Decomposition
 ```
 ## Long-run Impulse Response Function (Blanchard and Quah (1989))
 For a long-run impact measure, we employ Blanchard and Quah [(1989, American Economic Review)](https://www.jstor.org/stable/1827924?seq=1),
@@ -71,3 +56,6 @@ plt_irf = plot(x = 1:h, y = irf_lnt,
 # Saving the plot
 draw(PNG(pwd * "\\results\\irf_$(i)_$(j).png"), plt_irf)
 ```
+
+## Generalized Impulse Response Function
+In the sub-folder `yieldcurve`, I compute generalized impulse response function for yield curve response between United States (Treasury) and estimated Eurozone yield curve (European Central Bank).

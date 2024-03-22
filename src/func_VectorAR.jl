@@ -10,8 +10,39 @@ chol(mat) = convert(Array{Float64}, cholesky(Hermitian(mat)).U');
 # https://web.eecs.umich.edu/~fessler/course/551/julia/tutor/03-diag.html
 diagx(x) = diagm(vec(x))
 
-# (1) Function to calculate impulse response
+
+function func_contemp(bmat, 𝝨_ols, k, p)
+    # Functions to calculate contemporaneous matrix block
+    Ik = eye(k);
+    i_block = 1:k; # initial, block of coefficients for same lag.
+    for i = 1:p
+        Ik = Ik .- bmat[:, i_block];
+        # update the block index.
+        i_block = i_block .+ k;
+    end
+    Ik = inv(Ik);
+    
+    Bk = eye(k);
+    i_block = 1:k; # initial, block of coefficients for same lag.
+    for i = 1:p
+        Bk = Bk .- bmat[:, i_block]';
+        # update the block index.
+        i_block = i_block .+ k;
+    end
+    Bk = inv(Bk);
+
+    # Long run impact matrix
+    ψ0 = Ik * 𝝨_ols * Bk;
+    #return Ik, Bk, ψ0
+    ψ0 = chol(ψ0);
+
+    # Contemporaneous shock identificaiton.
+    ρ = Ik\ψ0';
+    return ρ
+end
+
 function func_VAR(data, p)
+    # Function for classical estimation of Vector Autoregressive model
     # x: partial equilibrium data
     # p: lag order
     T, k = size(data)
@@ -33,7 +64,72 @@ function func_VAR(data, p)
     return 𝚩, 𝞄, 𝝨;
 end
 
-function func_IRFvar(data, p, h, ℏ)
+function var_vd(data, p, ℏ)
+    # Functions for variance decomposition
+    T, k = size(data);
+
+    𝚩_ols, 𝞄_ols, 𝝨_ols = func_VAR(data, p);
+    V_ols = 𝚩_ols[:, 1];
+    𝚩_ols = 𝚩_ols[:, 2:size(𝚩_ols,2)];
+    # For standardization of the impulse response,
+    ρ = convert(Array{Float64}, cholesky(𝝨_ols).U');
+
+    𝝖 = [𝚩_ols; [kron(eye(k), eye(p - 1)) zeros(k*(p-1), k)]];
+    J = [eye(k) zeros(k, k*(p-1))];
+
+    # forecast error variance decomposition
+    TH1 = J * 𝝖^(0) *J';
+    TH = TH1 * ρ;
+    TH = TH';
+    TH2 = (TH .* TH);
+    TH3 = TH2;
+
+    for i=2:ℏ
+        TH = J * 𝝖^(i-1) * J' * ρ;
+        TH = TH'; TH2 = (TH.*TH);
+        TH3 = TH3 + TH2;
+    end;
+    TH4 = sum(TH3, dims = 1); VC = zeros(k, k);
+    for j=1:k
+        VC[j,:] = TH3[j, :] ./ TH4';
+    end;
+
+    FEVDC = VC'*100;
+
+    return FEVDC;
+end
+
+function var_hd(y, p)
+    # Function to calculate historical decomposition based on horizontal assumptions
+    h = 15;                            # Horizon - IRF
+
+    𝚩, 𝞄, 𝝨 = func_VAR(y, p);          # Coefficient matrix, 
+                                   # residuals, 
+                                   # and covariance matrix
+    ψ,
+        ψ_lb_1sd, ψ_ub_1sd,
+        ψ_lb_2sd, ψ_ub_2sd = func_IRFvar(y, p, h);      
+
+    T, K = size(y)
+    # already lower triangular
+    uhat = 𝞄 * inv(chol(𝝨))
+    # Initialize:
+    yhat_hd = zeros(T-p, K, K)
+    for i_shock = 1:K
+        ulast = uhat[:, i_shock]
+        uj = zeros(T-p, K);
+        for i_horizon = 1:h
+            uj = uj .+ (ulast .* ψ[:, i_shock, i_horizon]');
+            ulast = vcat(0, ulast[1:(end-1)]);
+        end
+        yhat_hd[:, :, i_shock] = uj
+    end
+
+    return yhat_hd
+end
+
+function func_IRFvar(data, p, h)
+    # Function to calculate classical impulse response function
     T, k = size(data);
 
     𝚩_ols, 𝞄_ols, 𝝨_ols = func_VAR(data, p);
@@ -123,103 +219,9 @@ function func_IRFvar(data, p, h, ℏ)
     ψ_lb_1sd = ψ - σ_ψ_boot
     ψ_ub_2sd = ψ + σ_ψ_boot * 2;
     ψ_lb_2sd = ψ - σ_ψ_boot * 2;
-
-    ############################################################################
-    # FORECAST ERROR VARIANCE DECOMPOSITION
-    T, k = size(data);
-
-    𝚩_ols, 𝞄_ols, 𝝨_ols = func_VAR(data, p);
-    V_ols = 𝚩_ols[:, 1];
-    𝚩_ols = 𝚩_ols[:, 2:size(𝚩_ols,2)];
-    # For standardization of the impulse response,
-    ρ = convert(Array{Float64}, cholesky(𝝨_ols).U');
-
-    𝝖 = [𝚩_ols; [kron(eye(k), eye(p - 1)) zeros(k*(p-1), k)]];
-    J = [eye(k) zeros(k, k*(p-1))];
-
-    # forecast error variance decomposition
-    TH1 = J * 𝝖^(0) *J';
-    TH = TH1 * ρ;
-    TH = TH';
-    TH2 = (TH .* TH);
-    TH3 = TH2;
-
-    for i=2:ℏ
-        TH = J * 𝝖^(i-1) * J' * ρ;
-        TH = TH'; TH2 = (TH.*TH);
-        TH3 = TH3 + TH2;
-    end;
-    TH4 = sum(TH3, dims = 1); VC = zeros(k, k);
-    for j=1:k
-        VC[j,:] = TH3[j, :] ./ TH4';
-    end;
-
-    FEVDC = VC'*100;
-
-    return ψ,
-           ψ_lb_1sd, ψ_ub_1sd, ψ_lb_2sd, ψ_ub_2sd,
-           FEVDC;
-end
-
-function var_hd(y, p)
-    h = 15;                            # Horizon - IRF
-    ℏ = 12;                            # Horizon - FEVDC
-
-    𝚩, 𝞄, 𝝨 = func_VAR(y, p);          # Coefficient matrix, 
-                                   # residuals, 
-                                   # and covariance matrix
-    ψ,
-        ψ_lb_1sd, ψ_ub_1sd,
-        ψ_lb_2sd, ψ_ub_2sd,
-        FEVDC = func_IRFvar(y, p, h, ℏ);      
-
-
-
-    T, K = size(y)
-    # already lower triangular
-    uhat = 𝞄 * inv(chol(𝝨))
-    # Initialize:
-    yhat_hd = zeros(T-p, K, K)
-    for i_shock = 1:K
-        ulast = uhat[:, i_shock]
-        uj = zeros(T-p, K);
-        for i_horizon = 1:h
-            uj = uj .+ (ulast .* ψ[:, i_shock, i_horizon]');
-            ulast = vcat(0, ulast[1:(end-1)]);
-        end
-        yhat_hd[:, :, i_shock] = uj
-    end
-
-    return yhat_hd
-end
-
-function func_contemp(bmat, 𝝨_ols, k, p)
-    Ik = eye(k);
-    i_block = 1:k; # initial, block of coefficients for same lag.
-    for i = 1:p
-        Ik = Ik .- bmat[:, i_block];
-        # update the block index.
-        i_block = i_block .+ k;
-    end
-    Ik = inv(Ik);
     
-    Bk = eye(k);
-    i_block = 1:k; # initial, block of coefficients for same lag.
-    for i = 1:p
-        Bk = Bk .- bmat[:, i_block]';
-        # update the block index.
-        i_block = i_block .+ k;
-    end
-    Bk = inv(Bk);
-
-    # Long run impact matrix
-    ψ0 = Ik * 𝝨_ols * Bk;
-    #return Ik, Bk, ψ0
-    ψ0 = chol(ψ0);
-
-    # Contemporaneous shock identificaiton.
-    ρ = Ik\ψ0';
-    return ρ
+    return ψ,
+           ψ_lb_1sd, ψ_ub_1sd, ψ_lb_2sd, ψ_ub_2sd;
 end
 
 function func_IRFvar_LR(data, p, h)
