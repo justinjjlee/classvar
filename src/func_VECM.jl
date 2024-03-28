@@ -59,3 +59,30 @@ function vecm(y, p, r)
 
     return α, β, Γ, Lam, Σ, Y, ΔY, X
 end
+
+function func_IRFvecm(data, p, r, h)
+    # Function to calculate classical impulse response function
+    T, k = size(data);
+
+    # Increasing lag prod to match the IRF calculations
+    α, β, Γ, Lam, Σ, Y, ΔY, X = vecm(data, p+1, r);
+
+    # Set up the contemporaneous matrix - the coefficient form
+    Γ = Γ[:, 2:size(Γ,2)];
+    # For standardization of the impulse response,
+    ρ = convert(Array{Float64}, cholesky(Σ).U');
+
+    𝝖 = [Γ; [kron(eye(k), eye(p - 1)) zeros(k*(p-1), k)]];
+    J = [eye(k) zeros(k, k*(p-1))];
+
+    # Compute impulse response
+    ψ = zeros(k, k, (h + 1));
+
+    for i_irf = 0:1:h
+        ψ[:,:, (i_irf + 1)] = J * 𝝖^(i_irf) * J';
+        # If needed to be standardized, multiply ρ
+    end
+    
+    # No confidence interval, for now
+    return ψ;
+end

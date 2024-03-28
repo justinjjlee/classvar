@@ -68,3 +68,9 @@ plot!(cumsum(ΔY[2,:]))
 
 plot(ŷ[3,:])
 plot!(ΔY[3,:])
+
+# Horizon sought for impulse response function
+h = 20
+ψ = func_IRFvecm(y, p, r, h)
+
+plot(cumsum(ψ[2,3,:]))
